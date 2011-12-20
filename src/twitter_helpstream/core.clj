@@ -5,6 +5,8 @@
 
 ;; Need to get the username and password from a twitter account somehow, I keep
 ;; them as ENV variables.
+(def u (System/getenv "TWITTER_UNAME"))
+(def p (System/getenv "TWITTER_PASSWORD"))
 
 ;; Lets make a map that we can store wordcounts in, we'll wrap it
 ;; in an agent so we can hit it from multiple threads.
