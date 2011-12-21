@@ -12,7 +12,7 @@
 ;; in an agent so we can hit it from multiple threads.
 (def words (atom {}))
 
-(defn foldingFn
+(defn keyPlusOne
   "takes a map and adds one to the key"
   [_map _string]
   (if (contains? _map _string)
@@ -22,7 +22,7 @@
 (defn count-list
   "Takes a list of strings and returns a map with the strings as keys and counts"
   [wordlist]
-  (reduce foldingFn {} wordlist))
+  (reduce keyPlusOne {} wordlist))
 
 (defn get-wordcounts
   "Gets the wordcounts of words in the sentence as a map"
