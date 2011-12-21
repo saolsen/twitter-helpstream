@@ -9,20 +9,17 @@
 (def p (System/getenv "TWITTER_PASSWORD"))
 
 ;; Lets make a map that we can store wordcounts in, we'll wrap it
-;; in an agent so we can hit it from multiple threads.
+;; in an atom so we can hit it from multiple threads.
 (def words (atom {}))
-
-(defn keyPlusOne
-  "takes a map and adds one to the key"
-  [_map _string]
-  (if (contains? _map _string)
-    (assoc _map _string (+ (get _map _string) 1))
-    (assoc _map _string 1)))
 
 (defn count-list
   "Takes a list of strings and returns a map with the strings as keys and counts"
   [wordlist]
-  (reduce keyPlusOne {} wordlist))
+  (let [keyPlusOne (fn [m s]
+                     (if (contains? m s)
+                       (assoc m s (+ (get m s) 1))
+                       (assoc m s 1)))]
+    (reduce keyPlusOne {} wordlist)))
 
 (defn get-wordcounts
   "Gets the wordcounts of words in the sentence as a map"
@@ -46,7 +43,7 @@
 (defn process-tweet
   "Main processing function called on every tweet"
   [tweet-json]
-  ;; Reads the json and then prints the wordcount
+  ;; Adds the wordcounts in each tweet to words
   (let [tweet (get-tweet tweet-json)
         wordcounts (get-wordcounts tweet)]
     (swap! words (fn [_map] (merge-with + _map wordcounts)))))
