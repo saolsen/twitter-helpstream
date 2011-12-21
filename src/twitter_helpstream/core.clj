@@ -10,7 +10,19 @@
 
 ;; Lets make a map that we can store wordcounts in, we'll wrap it
 ;; in an agent so we can hit it from multiple threads.
-(def words (agent hash-map))
+(def words (agent {}))
+
+(defn foldingFn
+  "takes a map and adds one to the key"
+  [_map _string]
+  (if (contains? _map _string)
+    (assoc _map _string (+ (get _map _string) 1))
+    (assoc _map _string 1)))
+
+(defn count-list
+  "Takes a list of strings and returns a map with the strings as keys and counts"
+  [wordlist]
+  (reduce foldingFn {} wordlist))
 
 (defn get-wordcounts
   "Gets the wordcounts of words in the sentence as a map"
@@ -18,19 +30,23 @@
   ;; Now I don't want to bother with any funny business regaurding
   ;; unicode characters and @peeps and other hashtags (unless they are
   ;; mid sentence)
-  (try
-    (s/split sentence #"\s")
-    (catch Exception e (vector))))
+  (if (not= nil sentence)
+    (count-list (s/split sentence #"\s"))
+    (hash-map)))
 
 (defn get-tweet
   "Gets the tweet from the json"
+  ;;Always returns a string or nil
   [json]
-  (:text (js/read-json json true false "")))
+  (try 
+    (:text (js/read-json json true false {}))
+    (catch Exception e
+      ())))
 
 (defn process-tweet
   "Main processing function called on every tweet"
   [tweet-json]
-  ;; Reads the json and then prints the part I care about, the tweet!
+  ;; Reads the json and then prints the wordcount
   (let [tweet (get-tweet tweet-json)]
     (println (get-wordcounts tweet))))
 
