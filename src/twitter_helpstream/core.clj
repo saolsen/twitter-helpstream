@@ -10,7 +10,7 @@
 
 ;; Lets make a map that we can store wordcounts in, we'll wrap it
 ;; in an agent so we can hit it from multiple threads.
-(def words (agent {}))
+(def words (atom {}))
 
 (defn foldingFn
   "takes a map and adds one to the key"
@@ -47,8 +47,9 @@
   "Main processing function called on every tweet"
   [tweet-json]
   ;; Reads the json and then prints the wordcount
-  (let [tweet (get-tweet tweet-json)]
-    (println (get-wordcounts tweet))))
+  (let [tweet (get-tweet tweet-json)
+        wordcounts (get-wordcounts tweet)]
+    (swap! words (fn [_map] (merge-with + _map wordcounts)))))
 
 (defn startStream
   "Connects to the twitter stream and processes tweets"
@@ -63,3 +64,8 @@
           (doseq [s (c/string tweet)]
             (process-tweet s))))
       (recur)))
+
+;; Finially we start the stream processing in a background thread (so that I can
+;; still work with words and other slime things while it runs)
+;; I shall be able to spin up many stream listening threads at once in this manner.
+(future startStream u p)
