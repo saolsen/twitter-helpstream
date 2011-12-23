@@ -8,9 +8,30 @@
 (def u (System/getenv "TWITTER_UNAME"))
 (def p (System/getenv "TWITTER_PASSWORD"))
 
-;; Lets make a map that we can store wordcounts in, we'll wrap it
-;; in an atom so we can hit it from multiple threads.
-(def words (atom {}))
+;; Couple sets that I use for filtering things
+(def valid-characters #{\a \b \c \d \e \f \g \h \i \j \k \l \m \n \o \p \q \r
+                        \s \t \u \v \w \x \y \z \. \, \? \! \# \@ \' \"})
+(def punctuation #{\. \, \? \! \@ \# \"})
+
+;; Helper functions
+(defn is-valid-word?
+  "Used for filtering out weird unicode and other sillyness"
+  [word]
+  (reduce #(and %1 %2)
+          (map #(contains? valid-characters %) word)))
+
+(defn strip-punc
+  "Strips the 'punctuation' out of the word"
+  [word]
+  (filter #(not (contains? punctuation %)) word))
+
+(defn to-words
+  "Takes the list of 'words' and filters out the crap."
+  [wordlist]
+  (let [low_words (map s/lower-case wordlist)
+        val_words (filter is-valid-word? low_words)
+        no_punc (map strip-punc val_words)]
+    (vec (map #(apply str %) no_punc))))
 
 (defn count-list
   "Takes a list of strings and returns a map with the strings as keys and counts"
@@ -28,7 +49,7 @@
   ;; unicode characters and @peeps and other hashtags (unless they are
   ;; mid sentence)
   (if (not= nil sentence)
-    (count-list (s/split sentence #"\s"))
+    (count-list (to-words (s/split sentence #"\s")))
     (hash-map)))
 
 (defn get-tweet
