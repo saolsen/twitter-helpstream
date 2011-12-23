@@ -3,15 +3,13 @@
             [clojure.data.json :as js]
             [clojure.string :as s]))
 
-;; Need to get the username and password from a twitter account somehow, I keep
-;; them as ENV variables.
-(def u (System/getenv "TWITTER_UNAME"))
-(def p (System/getenv "TWITTER_PASSWORD"))
-
 ;; Couple sets that I use for filtering things
 (def valid-characters #{\a \b \c \d \e \f \g \h \i \j \k \l \m \n \o \p \q \r
                         \s \t \u \v \w \x \y \z \. \, \? \! \# \@ \' \"})
 (def punctuation #{\. \, \? \! \@ \# \"})
+
+;; Stores the map of wordcounts
+(def words (atom {}))
 
 ;; Helper functions
 (defn is-valid-word?
@@ -67,8 +65,10 @@
   ;; Adds the wordcounts in each tweet to words
   (let [tweet (get-tweet tweet-json)
         wordcounts (get-wordcounts tweet)]
-    (swap! words (fn [_map] (merge-with + _map wordcounts)))))
+    (swap! words #(merge-with + % wordcounts))))
 
+;; Startstream will be run in one future, it will watch the stream and update
+;; the wordcounts
 (defn startStream
   "Connects to the twitter stream and processes tweets"
   [username password]
@@ -83,7 +83,14 @@
             (process-tweet s))))
       (recur)))
 
-;; Finially we start the stream processing in a background thread (so that I can
-;; still work with words and other slime things while it runs)
-;; I shall be able to spin up many stream listening threads at once in this manner.
-(future startStream u p)
+;; This is for me to be able to see that it is indeed running. It will run in
+;; another future and print to standard out. (will not run in production)
+(defn printMap
+  "Prints the map every n seconds"
+  [n]
+  (let [secs (* 1000 n)]
+    (loop []
+      (do
+        (println @words)
+        (. java.lang.Thread sleep secs))
+      (recur))))
