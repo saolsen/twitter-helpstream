@@ -5,8 +5,8 @@
 
 ;; Couple sets that I use for filtering things
 (def valid-characters #{\a \b \c \d \e \f \g \h \i \j \k \l \m \n \o \p \q \r
-                        \s \t \u \v \w \x \y \z \. \, \? \! \# \@ \' \"})
-(def punctuation #{\. \, \? \! \@ \# \"})
+                        \s \t \u \v \w \x \y \z \. \, \? \! \#  \' \"})
+(def punctuation #{\. \, \? \! \# \"})
 
 ;; Stores the map of wordcounts
 (def words (atom {}))
@@ -57,7 +57,7 @@
   (try
     (:text (js/read-json json true false {}))
     (catch Exception e
-      ())))
+      nil)))
 
 (defn process-tweet
   "Main processing function called on every tweet"
@@ -65,8 +65,6 @@
   ;; Adds the wordcounts in each tweet to words
   (let [tweet (get-tweet tweet-json)
         wordcounts (get-wordcounts tweet)]
-    (do
-      (println tweet))
       (swap! words #(merge-with + % wordcounts))))
 
 ;; Startstream will be run in one future, it will watch the stream and update
