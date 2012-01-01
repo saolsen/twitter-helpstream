@@ -54,7 +54,7 @@
   "Gets the tweet from the json"
   ;;Always returns a string or nil
   [json]
-  (try 
+  (try
     (:text (js/read-json json true false {}))
     (catch Exception e
       ())))
@@ -65,7 +65,9 @@
   ;; Adds the wordcounts in each tweet to words
   (let [tweet (get-tweet tweet-json)
         wordcounts (get-wordcounts tweet)]
-    (swap! words #(merge-with + % wordcounts))))
+    (do
+      (println tweet))
+      (swap! words #(merge-with + % wordcounts))))
 
 ;; Startstream will be run in one future, it will watch the stream and update
 ;; the wordcounts

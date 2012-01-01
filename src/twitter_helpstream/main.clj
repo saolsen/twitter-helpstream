@@ -1,5 +1,7 @@
 (ns twitter-helpstream.main
-  (:use [twitter-helpstream.core :only [startStream printMap]])
+  (:use [twitter-helpstream.core :only [startStream printMap]]
+        [twitter-helpstream.web :only [handler]]
+        [ring.adapter.jetty])
   (:gen-class))
 
 ;; Need to get the username and password from a twitter account somehow, I keep
@@ -10,6 +12,10 @@
 (defn -main
   "Main entry point"
   []
-  (let [stream (future (startStream u p))
-        prints (future (printMap 15))]
-    (loop [] () (recur))))
+  (let [consumer (future (startStream u p))
+        streamer (future (printMap))
+        port (Integer/parseInt (System/getenv "PORT"))]
+    (do
+      (println "Beginning Server")
+      (println "Username:" u \newline "Password:" p)
+      (run-jetty handler {:port port}))))
